@@ -5,6 +5,9 @@
   export let containerHeight: number;
   export let particleCount: number = 50;
   export let particleIcon: string;
+  export let staticIcon: string = "/mary2.png";
+
+  const STATIC_SIZE = 100; // Size of static particles in pixels
 
   interface Particle {
     x: number;
@@ -15,21 +18,31 @@
     opacity: number;
     rotation: number;
     rotationSpeed: number;
+    isStatic: boolean;
+    originalSize: number;
+    originalX: number;
+    originalY: number;
   }
 
   let particles: Particle[] = [];
-  let frame = 0; // Add this line to force updates
 
   function createParticle(): Particle {
+    const size = Math.random() * 20 + 10;
+    const x = Math.random() * (containerWidth - size);
+    const y = Math.random() * (containerHeight - size);
     return {
-      x: Math.random() * containerWidth,
-      y: Math.random() * containerHeight,
-      size: Math.random() * 20 + 10,
+      x,
+      y,
+      size,
       speedX: (Math.random() - 0.5) * 100,
       speedY: (Math.random() - 0.5) * 100,
       opacity: Math.random() * 0.5 + 0.5,
       rotation: Math.random() * 360,
       rotationSpeed: (Math.random() - 0.5) * 2,
+      isStatic: false,
+      originalSize: size,
+      originalX: x,
+      originalY: y,
     };
   }
 
@@ -40,18 +53,20 @@
   function updateParticles(delta: number) {
     const deltaSeconds = delta / 1000;
     particles = particles.map((particle) => {
+      if (particle.isStatic) return particle;
+
       // Update position
       particle.x += particle.speedX * deltaSeconds;
       particle.y += particle.speedY * deltaSeconds;
 
       // Bounce off walls
-      if (particle.x < 0 || particle.x > containerWidth) {
+      if (particle.x < 0 || particle.x + particle.size > containerWidth) {
         particle.speedX = -particle.speedX;
-        particle.x = Math.max(0, Math.min(particle.x, containerWidth));
+        particle.x = particle.x < 0 ? 0 : containerWidth - particle.size;
       }
-      if (particle.y < 0 || particle.y > containerHeight) {
+      if (particle.y < 0 || particle.y + particle.size > containerHeight) {
         particle.speedY = -particle.speedY;
-        particle.y = Math.max(0, Math.min(particle.y, containerHeight));
+        particle.y = particle.y < 0 ? 0 : containerHeight - particle.size;
       }
 
       // Update rotation
@@ -62,7 +77,44 @@
 
       return particle;
     });
-    frame++; // Increment frame to force update
+  }
+
+  function toggleParticleState(index: number) {
+    const particle = particles[index];
+    if (particle.isStatic) {
+      // Change back to moving state
+      particle.isStatic = false;
+      particle.size = particle.originalSize;
+      particle.x = particle.originalX;
+      particle.y = particle.originalY;
+    } else {
+      // Change to static state
+      particle.isStatic = true;
+      particle.opacity = 1;
+      particle.rotation = 0; // Remove rotation
+
+      // Store original position
+      particle.originalX = particle.x;
+      particle.originalY = particle.y;
+
+      // Adjust position to center the larger particle
+      const sizeDiff = STATIC_SIZE - particle.size;
+      particle.x -= sizeDiff / 2;
+      particle.y -= sizeDiff / 2;
+
+      // Ensure the particle stays within bounds
+      particle.x = Math.max(
+        0,
+        Math.min(particle.x, containerWidth - STATIC_SIZE)
+      );
+      particle.y = Math.max(
+        0,
+        Math.min(particle.y, containerHeight - STATIC_SIZE)
+      );
+
+      particle.size = STATIC_SIZE; // Set to the new static size
+    }
+    particles = particles; // Trigger Svelte reactivity
   }
 
   let animationFrame: number;
@@ -93,16 +145,32 @@
   }
 </script>
 
-{#each particles as particle (particle)}
-  <img
-    src={particleIcon}
-    alt="Particle"
+{#each particles as particle, i}
+  <button
+    on:click={() => toggleParticleState(i)}
+    on:keydown={(e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        toggleParticleState(i);
+      }
+    }}
     style="position: absolute; 
            left: {particle.x}px; 
            top: {particle.y}px; 
            width: {particle.size}px; 
            height: {particle.size}px; 
            opacity: {particle.opacity};
-           transform: rotate({particle.rotation}deg);"
-  />
+           transform: rotate({particle.isStatic ? 0 : particle.rotation}deg);
+           cursor: pointer;
+           background: none;
+           border: none;
+           padding: 0;
+           transition: all 0.3s ease;"
+    aria-label={particle.isStatic ? "Static particle" : "Moving particle"}
+  >
+    <img
+      src={particle.isStatic ? staticIcon : particleIcon}
+      alt=""
+      style="width: 100%; height: 100%; object-fit: cover;"
+    />
+  </button>
 {/each}
