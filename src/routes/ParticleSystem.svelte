@@ -19,21 +19,30 @@
     rotation: number;
     rotationSpeed: number;
     isStatic: boolean;
+    originalSize: number;
+    originalX: number;
+    originalY: number;
   }
 
   let particles: Particle[] = [];
 
   function createParticle(): Particle {
+    const size = Math.random() * 20 + 10;
+    const x = Math.random() * (containerWidth - size);
+    const y = Math.random() * (containerHeight - size);
     return {
-      x: Math.random() * containerWidth,
-      y: Math.random() * containerHeight,
-      size: Math.random() * 20 + 10,
+      x,
+      y,
+      size,
       speedX: (Math.random() - 0.5) * 100,
       speedY: (Math.random() - 0.5) * 100,
       opacity: Math.random() * 0.5 + 0.5,
       rotation: Math.random() * 360,
       rotationSpeed: (Math.random() - 0.5) * 2,
       isStatic: false,
+      originalSize: size,
+      originalX: x,
+      originalY: y,
     };
   }
 
@@ -51,13 +60,13 @@
       particle.y += particle.speedY * deltaSeconds;
 
       // Bounce off walls
-      if (particle.x < 0 || particle.x > containerWidth) {
+      if (particle.x < 0 || particle.x + particle.size > containerWidth) {
         particle.speedX = -particle.speedX;
-        particle.x = Math.max(0, Math.min(particle.x, containerWidth));
+        particle.x = particle.x < 0 ? 0 : containerWidth - particle.size;
       }
-      if (particle.y < 0 || particle.y > containerHeight) {
+      if (particle.y < 0 || particle.y + particle.size > containerHeight) {
         particle.speedY = -particle.speedY;
-        particle.y = Math.max(0, Math.min(particle.y, containerHeight));
+        particle.y = particle.y < 0 ? 0 : containerHeight - particle.size;
       }
 
       // Update rotation
@@ -70,12 +79,23 @@
     });
   }
 
-  function handleInteraction(index: number) {
+  function toggleParticleState(index: number) {
     const particle = particles[index];
-    if (!particle.isStatic) {
+    if (particle.isStatic) {
+      // Change back to moving state
+      particle.isStatic = false;
+      particle.size = particle.originalSize;
+      particle.x = particle.originalX;
+      particle.y = particle.originalY;
+    } else {
+      // Change to static state
       particle.isStatic = true;
       particle.opacity = 1;
       particle.rotation = 0; // Remove rotation
+
+      // Store original position
+      particle.originalX = particle.x;
+      particle.originalY = particle.y;
 
       // Adjust position to center the larger particle
       const sizeDiff = STATIC_SIZE - particle.size;
@@ -93,8 +113,8 @@
       );
 
       particle.size = STATIC_SIZE; // Set to the new static size
-      particles = particles; // Trigger Svelte reactivity
     }
+    particles = particles; // Trigger Svelte reactivity
   }
 
   let animationFrame: number;
@@ -127,10 +147,10 @@
 
 {#each particles as particle, i}
   <button
-    on:click={() => handleInteraction(i)}
+    on:click={() => toggleParticleState(i)}
     on:keydown={(e) => {
       if (e.key === "Enter" || e.key === " ") {
-        handleInteraction(i);
+        toggleParticleState(i);
       }
     }}
     style="position: absolute; 
