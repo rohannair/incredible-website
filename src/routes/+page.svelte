@@ -15,8 +15,9 @@
   let vx = 200;
   let vy = 200;
 
-  // Define the URL for the single particle icon
+  // Define the URLs for the particle icons
   const particleIcon = "/chicken.png";
+  const staticIcon = "/mary2.png";
 
   function handleImageLoad(): void {
     if (image) {
@@ -104,6 +105,7 @@
     {containerHeight}
     particleCount={30}
     {particleIcon}
+    {staticIcon}
   />
   <img
     bind:this={image}
