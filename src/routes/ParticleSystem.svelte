@@ -1,7 +1,5 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import { cubicOut } from "svelte/easing";
-  import { tweened } from "svelte/motion";
 
   export let containerWidth: number;
   export let containerHeight: number;
@@ -12,74 +10,59 @@
     x: number;
     y: number;
     size: number;
-    speed: number;
-    angle: number;
+    speedX: number;
+    speedY: number;
     opacity: number;
-    tweened: {
-      x: number;
-      y: number;
-      opacity: number;
-    };
+    rotation: number;
+    rotationSpeed: number;
   }
 
   let particles: Particle[] = [];
+  let frame = 0; // Add this line to force updates
 
   function createParticle(): Particle {
-    const size = Math.random() * 20 + 10;
-    const x = Math.random() * containerWidth;
-    const y = Math.random() * containerHeight;
-    const opacity = Math.random() * 0.5 + 0.5;
-
-    const tween = tweened(
-      { x, y, opacity },
-      { duration: 1000, easing: cubicOut }
-    );
-
-    const particle: Particle = {
-      x,
-      y,
-      size,
-      speed: Math.random() * 50 + 25,
-      angle: Math.random() * Math.PI * 2,
-      opacity,
-      tweened: { x, y, opacity },
+    return {
+      x: Math.random() * containerWidth,
+      y: Math.random() * containerHeight,
+      size: Math.random() * 20 + 10,
+      speedX: (Math.random() - 0.5) * 100,
+      speedY: (Math.random() - 0.5) * 100,
+      opacity: Math.random() * 0.5 + 0.5,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 2,
     };
-
-    tween.subscribe((value) => {
-      particle.tweened = value;
-    });
-
-    return particle;
   }
 
   function initParticles() {
     particles = Array(particleCount).fill(null).map(createParticle);
   }
 
-  function updateParticle(particle: Particle, delta: number) {
-    const dx = Math.cos(particle.angle) * particle.speed * (delta / 1000);
-    const dy = Math.sin(particle.angle) * particle.speed * (delta / 1000);
+  function updateParticles(delta: number) {
+    const deltaSeconds = delta / 1000;
+    particles = particles.map((particle) => {
+      // Update position
+      particle.x += particle.speedX * deltaSeconds;
+      particle.y += particle.speedY * deltaSeconds;
 
-    let newX = particle.x + dx;
-    let newY = particle.y + dy;
+      // Bounce off walls
+      if (particle.x < 0 || particle.x > containerWidth) {
+        particle.speedX = -particle.speedX;
+        particle.x = Math.max(0, Math.min(particle.x, containerWidth));
+      }
+      if (particle.y < 0 || particle.y > containerHeight) {
+        particle.speedY = -particle.speedY;
+        particle.y = Math.max(0, Math.min(particle.y, containerHeight));
+      }
 
-    if (newX < 0 || newX > containerWidth) {
-      particle.angle = Math.PI - particle.angle;
-      newX = Math.max(0, Math.min(newX, containerWidth));
-    }
-    if (newY < 0 || newY > containerHeight) {
-      particle.angle = -particle.angle;
-      newY = Math.max(0, Math.min(newY, containerHeight));
-    }
+      // Update rotation
+      particle.rotation += particle.rotationSpeed * deltaSeconds * 60;
 
-    particle.x = newX;
-    particle.y = newY;
+      // Update opacity (make it pulse)
+      particle.opacity = 0.5 + Math.sin(Date.now() / 1000) * 0.25;
 
-    particle.tweened = {
-      x: newX,
-      y: newY,
-      opacity: particle.opacity,
-    };
+      return particle;
+    });
+    frame++; // Increment frame to force update
   }
 
   let animationFrame: number;
@@ -88,7 +71,7 @@
   function animate(time: number) {
     if (lastTime) {
       const delta = time - lastTime;
-      particles.forEach((particle) => updateParticle(particle, delta));
+      updateParticles(delta);
     }
     lastTime = time;
     animationFrame = requestAnimationFrame(animate);
@@ -114,9 +97,12 @@
   <img
     src={particleIcon}
     alt="Particle"
-    style="position: absolute; left: {particle.tweened.x}px; top: {particle
-      .tweened
-      .y}px; width: {particle.size}px; height: {particle.size}px; opacity: {particle
-      .tweened.opacity};"
+    style="position: absolute; 
+           left: {particle.x}px; 
+           top: {particle.y}px; 
+           width: {particle.size}px; 
+           height: {particle.size}px; 
+           opacity: {particle.opacity};
+           transform: rotate({particle.rotation}deg);"
   />
 {/each}
