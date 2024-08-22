@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { tweened, spring } from "svelte/motion";
   import { linear } from "svelte/easing";
+  import { spring, tweened } from "svelte/motion";
+  import ParticleSystem from "./ParticleSystem.svelte";
 
   let containerWidth: number;
   let containerHeight: number;
@@ -19,6 +20,9 @@
   );
 
   let velocity = { x: 200, y: 200 };
+
+  // Define the URL for the single particle icon
+  const particleIcon = "/chicken.png";
 
   function handleImageLoad(): void {
     if (image) {
@@ -110,6 +114,12 @@
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
   >
+    <ParticleSystem
+      {containerWidth}
+      {containerHeight}
+      particleCount={30}
+      {particleIcon}
+    />
     <img
       bind:this={image}
       src="/maryface.png"
