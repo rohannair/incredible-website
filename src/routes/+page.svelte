@@ -2,6 +2,7 @@
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import ParticleSystem from "./ParticleSystem.svelte";
+  import HeroBanner from "./HeroBanner.svelte";
 
   let containerWidth: number = 1000; // Default value
   let containerHeight: number = 600; // Default value
@@ -114,7 +115,7 @@
     on:load={handleImageLoad}
     style="position: absolute; left: {x}px; top: {y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
   />
-  <div class="psychedelic-text">MARY CHOI!!!!!!</div>
+  <HeroBanner />
   <footer class="footer">
     <a
       href="https://marymchoi.com"
@@ -192,17 +193,22 @@
     display: flex;
     justify-content: center;
     z-index: 20;
+    opacity: 0.4;
+  }
+
+  .footer:hover {
+    opacity: 1;
   }
 
   .button {
     background-color: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 5px 10px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
+    font-size: 12px;
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 25px;
@@ -210,6 +216,6 @@
   }
 
   .button:hover {
-    background-color: #45a049;
+    background-color: rgba(255, 255, 255, 0.6);
   }
 </style>

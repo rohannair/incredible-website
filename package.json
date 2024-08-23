@@ -23,6 +23,8 @@
   "type": "module",
   "dependencies": {
     "@sveltejs/adapter-node": "^5.2.2",
-    "svelte-motion": "^0.12.2"
+    "@types/three": "^0.167.2",
+    "svelte-motion": "^0.12.2",
+    "three": "^0.167.1"
   }
 }
