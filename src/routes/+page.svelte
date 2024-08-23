@@ -1,9 +1,11 @@
 <script lang="ts">
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
-  import ParticleSystem from "./ParticleSystem.svelte";
-  import HeroBanner from "./HeroBanner.svelte";
   import SvelteSeo from "svelte-seo";
+  import { cubicInOut } from "svelte/easing";
+  import { tweened } from "svelte/motion";
+  import HeroBanner from "./HeroBanner.svelte";
+  import ParticleSystem from "./ParticleSystem.svelte";
 
   let containerWidth: number = 1000; // Default value
   let containerHeight: number = 600; // Default value
@@ -20,6 +22,28 @@
   // Define the URLs for the particle icons
   const particleIcon = "/chicken.png";
   const staticIcon = "/mary2.png";
+  const kingstonIcon = "/kingston.png";
+
+  let gameWon = false;
+  let heroText = "MARY CHOI";
+  let particleCount = 15; // Easier to win in debug mode
+
+  const scale = tweened(1, {
+    duration: 2000,
+    easing: cubicInOut,
+  });
+
+  function handleGameWon() {
+    gameWon = true;
+    heroText = "KINGSTON'S VALET";
+    animateKingstonImage();
+  }
+
+  function animateKingstonImage() {
+    const zoomIn = () => scale.set(1.5, { duration: 1000 }).then(zoomOut);
+    const zoomOut = () => scale.set(1, { duration: 1000 }).then(zoomIn);
+    zoomIn();
+  }
 
   function handleImageLoad(): void {
     if (image) {
@@ -33,6 +57,8 @@
   }
 
   function updatePosition(delta: number): void {
+    if (gameWon) return;
+
     const deltaSeconds = delta / 1000;
 
     x += vx * deltaSeconds;
@@ -109,6 +135,12 @@
         height: 577,
         alt: "Mary",
       },
+      {
+        url: "/kingston.png",
+        width: 748,
+        height: 544,
+        alt: "Kingston",
+      },
     ],
     site_name: "Mary Choi",
   }}
@@ -131,18 +163,27 @@
   <ParticleSystem
     {containerWidth}
     {containerHeight}
-    particleCount={30}
+    {particleCount}
     {particleIcon}
     {staticIcon}
+    on:gameWon={handleGameWon}
   />
-  <img
-    bind:this={image}
-    src="/maryface.png"
-    alt="Mary Choi"
-    on:load={handleImageLoad}
-    style="position: absolute; left: {x}px; top: {y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
-  />
-  <HeroBanner />
+  {#if !gameWon}
+    <img
+      bind:this={image}
+      src="/maryface.png"
+      alt="Mary Choi"
+      on:load={handleImageLoad}
+      style="position: absolute; left: {x}px; top: {y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
+    />
+  {:else}
+    <img
+      src={kingstonIcon}
+      alt="Kingston"
+      style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale({$scale}); max-width: 80%; max-height: 80%; object-fit: contain;"
+    />
+  {/if}
+  <HeroBanner text={heroText} />
   <footer class="footer">
     <a
       href="https://marymchoi.com"
@@ -175,41 +216,6 @@
     justify-content: center;
     align-items: center;
     position: relative;
-  }
-
-  .psychedelic-text {
-    position: absolute;
-    font-size: 4rem;
-    font-weight: bold;
-    text-align: center;
-    white-space: nowrap;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-    z-index: 5;
-    color: white;
-    animation: psychedelic 5s infinite linear;
-  }
-
-  @keyframes psychedelic {
-    0% {
-      color: red;
-      transform: scale(1) rotate(0deg);
-    }
-    25% {
-      color: yellow;
-      transform: scale(1.2) rotate(90deg);
-    }
-    50% {
-      color: blue;
-      transform: scale(1) rotate(180deg);
-    }
-    75% {
-      color: green;
-      transform: scale(1.2) rotate(270deg);
-    }
-    100% {
-      color: red;
-      transform: scale(1) rotate(360deg);
-    }
   }
 
   .footer {
