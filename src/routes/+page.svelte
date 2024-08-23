@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import ParticleSystem from "./ParticleSystem.svelte";
   import HeroBanner from "./HeroBanner.svelte";
+  import SvelteSeo from "svelte-seo";
 
   let containerWidth: number = 1000; // Default value
   let containerHeight: number = 600; // Default value
@@ -86,6 +87,32 @@
 </script>
 
 <svelte:window on:resize={handleResize} />
+
+<SvelteSeo
+  title="Mary Choi | Kingston's Personal Valet 🐶"
+  description="Hi, I'm Mary, an Engineering Manager and Full Stack Engineer with healthcare experience. I build teams and robust, user-centric applications."
+  openGraph={{
+    title: "Mary Choi | Kingston's Personal Valet 🐶",
+    description:
+      "Hi, I'm Mary, an Engineering Manager and Full Stack Engineer with healthcare experience. I build teams and robust, user-centric applications.",
+    type: "website",
+    images: [
+      {
+        url: "/maryface.png",
+        width: 460,
+        height: 460,
+        alt: "Mary",
+      },
+      {
+        url: "/mary2.png",
+        width: 433,
+        height: 577,
+        alt: "Mary",
+      },
+    ],
+    site_name: "Mary Choi",
+  }}
+/>
 
 <svelte:head>
   <style>
