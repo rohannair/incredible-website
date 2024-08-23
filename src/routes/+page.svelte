@@ -25,55 +25,14 @@
   const kingstonIcon = "/kingston.png";
 
   let gameWon = false;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
   let heroText = "MARY CHOI";
-<<<<<<< HEAD
-  let particleCount = 15; // Easier to win in debug mode
-=======
-  let displayText = "MARY CHOI!!!!!!";
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-  let heroText = "MARY CHOI";
-<<<<<<< HEAD
-  let particleCount = 15; // Easier to win in debug mode
->>>>>>> 8d6c205 (add kingston game)
-=======
-=======
-<<<<<<< HEAD
->>>>>>> b6c0c2b (update kingston image and add score and timer)
-=======
-  let heroText = "MARY CHOI";
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
-  let particleCount = 25; // Easier to win in debug mode
+  let particleCount = 3; // Easier to win in debug mode
 
   // New variables for timer and score
   let timerStarted = false;
   let timerValue = 0;
   let clickedParticles = 0;
   let startTime: number;
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> b6c0c2b (update kingston image and add score and timer)
-=======
-  let displayText = "MARY CHOI!!!!!!";
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-  let heroText = "MARY CHOI";
-  let particleCount = 15; // Easier to win in debug mode
->>>>>>> 8d6c205 (add kingston game)
-=======
-=======
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
->>>>>>> b6c0c2b (update kingston image and add score and timer)
-=======
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
 
   const scale = tweened(1, {
     duration: 2000,
@@ -82,67 +41,15 @@
 
   function handleGameWon() {
     gameWon = true;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
     heroText = "KINGSTON'S VALET";
-=======
-    displayText = "KINGSTON";
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-    heroText = "KINGSTON'S VALET";
->>>>>>> 8d6c205 (add kingston game)
-=======
-    heroText = "KINGSTON'S VALET";
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
     animateKingstonImage();
     stopTimer();
   }
 
   function animateKingstonImage() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     const zoomIn = () => scale.set(1.5, { duration: 1000 }).then(zoomOut);
     const zoomOut = () => scale.set(1, { duration: 1000 }).then(zoomIn);
     zoomIn();
-=======
-    scale.set(1.5).then(() => scale.set(1));
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-    const zoomIn = () => scale.set(1.5, { duration: 1000 }).then(zoomOut);
-    const zoomOut = () => scale.set(1, { duration: 1000 }).then(zoomIn);
-    zoomIn();
->>>>>>> 8d6c205 (add kingston game)
-=======
-<<<<<<< HEAD
-    displayText = "KINGSTON";
-=======
-    heroText = "KINGSTON'S VALET";
->>>>>>> 8d6c205 (add kingston game)
-    animateKingstonImage();
-    stopTimer();
-  }
-
-  function animateKingstonImage() {
-<<<<<<< HEAD
-    scale.set(1.5).then(() => scale.set(1));
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-    const zoomIn = () => scale.set(1.5, { duration: 1000 }).then(zoomOut);
-    const zoomOut = () => scale.set(1, { duration: 1000 }).then(zoomIn);
-    zoomIn();
->>>>>>> 8d6c205 (add kingston game)
-=======
-    const zoomIn = () => scale.set(1.5, { duration: 1000 }).then(zoomOut);
-    const zoomOut = () => scale.set(1, { duration: 1000 }).then(zoomIn);
-    zoomIn();
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
   }
 
   function handleImageLoad(): void {
@@ -287,14 +194,6 @@
   class="container"
   style="width: {containerWidth}px; height: {containerHeight}px;"
 >
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 8d6c205 (add kingston game)
-=======
->>>>>>> 8d6c205 (add kingston game)
   <ParticleSystem
     {containerWidth}
     {containerHeight}
@@ -302,44 +201,9 @@
     {particleIcon}
     {staticIcon}
     on:gameWon={handleGameWon}
-<<<<<<< HEAD
-<<<<<<< HEAD
     on:particleClick={handleParticleClick}
   />
-<<<<<<< HEAD
-<<<<<<< HEAD
   {#if !gameWon}
-=======
-=======
->>>>>>> d9d4d45 (resolve merge issues)
-  {#if !gameWon}
-    <ParticleSystem
-      {containerWidth}
-      {containerHeight}
-      particleCount={30}
-      {particleIcon}
-      {staticIcon}
-      on:gameWon={handleGameWon}
-    />
-<<<<<<< HEAD
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-  {#if !gameWon}
->>>>>>> 8d6c205 (add kingston game)
-=======
-<<<<<<< HEAD
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-=======
-    on:particleClick={handleParticleClick}
->>>>>>> b6c0c2b (update kingston image and add score and timer)
-  />
-  {#if !gameWon}
->>>>>>> 8d6c205 (add kingston game)
-=======
-  {#if !gameWon}
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
     <img
       bind:this={image}
       src="/maryface.png"
@@ -347,25 +211,6 @@
       on:load={handleImageLoad}
       style="position: absolute; left: {x}px; top: {y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
     />
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-    <HeroBanner />
->>>>>>> d9d4d45 (resolve merge issues)
-=======
->>>>>>> 8d6c205 (add kingston game)
-=======
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
-=======
-    <HeroBanner />
->>>>>>> d9d4d45 (resolve merge issues)
-=======
->>>>>>> 8d6c205 (add kingston game)
-=======
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
   {:else}
     <img
       src={kingstonIcon}
@@ -373,32 +218,7 @@
       style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale({$scale}); max-width: 80%; max-height: 80%; object-fit: contain;"
     />
   {/if}
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
   <HeroBanner text={heroText} />
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-  <div class="psychedelic-text">
-    {displayText}
-  </div>
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-  <HeroBanner text={heroText} />
->>>>>>> 8d6c205 (add kingston game)
-=======
-=======
-<<<<<<< HEAD
->>>>>>> b6c0c2b (update kingston image and add score and timer)
-=======
-  <HeroBanner text={heroText} />
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
   <div class="game-stats">
     <p>Time: {(timerValue / 1000).toFixed(3)} seconds</p>
     <p>Score: {clickedParticles}/{particleCount}</p>
@@ -409,23 +229,6 @@
       ></div>
     </div>
   </div>
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> b6c0c2b (update kingston image and add score and timer)
-=======
-  <div class="psychedelic-text">
-    {displayText}
-  </div>
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-  <HeroBanner text={heroText} />
->>>>>>> 8d6c205 (add kingston game)
-=======
-=======
->>>>>>> 9e40e4e37bed04377761c606a1fd6cff7eb88628
->>>>>>> b6c0c2b (update kingston image and add score and timer)
-=======
->>>>>>> b6c0c2bd0f5e1d7233d26a42d2809946892e2d7a
   <footer class="footer">
     <a
       href="https://marymchoi.com"

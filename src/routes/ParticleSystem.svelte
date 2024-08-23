@@ -1,23 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 <script lang="ts" context="module">
-=======
-<script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from "svelte";
-
-  export let containerWidth: number;
-  export let containerHeight: number;
-  export let particleCount: number = 2;
-  export let particleIcon: string;
-  export let staticIcon: string = "/mary2.png";
-
-  const STATIC_SIZE = 100; // Size of static particles in pixels
-  const dispatch = createEventDispatcher();
-
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-<script lang="ts" context="module">
->>>>>>> b6c0c2b (update kingston image and add score and timer)
   interface Particle {
     x: number;
     y: number;
@@ -57,18 +38,8 @@
       x,
       y,
       size,
-<<<<<<< HEAD
-<<<<<<< HEAD
       speedX: (Math.random() - 0.5) * 250,
       speedY: (Math.random() - 0.5) * 250,
-=======
-      speedX: (Math.random() - 0.5) * 150,
-      speedY: (Math.random() - 0.5) * 150,
->>>>>>> d9d4d45 (resolve merge issues)
-=======
-      speedX: (Math.random() - 0.5) * 250,
-      speedY: (Math.random() - 0.5) * 250,
->>>>>>> 8d6c205 (add kingston game)
       opacity: Math.random() * 0.5 + 0.5,
       rotation: Math.random() * 360,
       rotationSpeed: (Math.random() - 0.5) * 5,
