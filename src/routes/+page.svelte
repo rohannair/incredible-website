@@ -26,7 +26,7 @@
 
   let gameWon = false;
   let heroText = "MARY CHOI";
-  let particleCount = 3; // Easier to win in debug mode
+  let particleCount = 25; // Easier to win in debug mode
 
   // New variables for timer and score
   let timerStarted = false;
