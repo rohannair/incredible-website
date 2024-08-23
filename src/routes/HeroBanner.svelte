@@ -1,26 +1,27 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import * as THREE from "three";
   import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-  import { FontLoader } from "three/addons/loaders/FontLoader.js";
   import type { Font } from "three/addons/loaders/FontLoader.js";
+  import { FontLoader } from "three/addons/loaders/FontLoader.js";
+
+  export let text: string = "MARY CHOI";
 
   let container: HTMLDivElement;
   let scene: THREE.Scene;
   let camera: THREE.PerspectiveCamera;
   let renderer: THREE.WebGLRenderer;
   let textMesh: THREE.Mesh<TextGeometry, THREE.MeshPhysicalMaterial>;
-  let exclamationMesh: THREE.Mesh<TextGeometry, THREE.MeshPhysicalMaterial>;
   let isSpinning = true;
-  let exclamationCount = 0;
-  let increasing = true;
+  let raycaster: THREE.Raycaster;
+  let mouse: THREE.Vector2;
+  let font: Font;
 
   const loader = new FontLoader();
 
   onMount(() => {
     init();
     animate();
-    animateExclamations();
   });
 
   onDestroy(() => {
@@ -43,6 +44,9 @@
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
+
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
 
     // Lighting setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -78,54 +82,48 @@
 
     loader.load(
       "https://threejs.org/examples/fonts/helvetiker_bold.typeface.json",
-      (font: Font) => {
-        const textGeometry = new TextGeometry("MARY CHOI!!!!!!!!", {
-          font: font,
-          size: 0.7,
-          height: 0.2,
-          curveSegments: 12,
-          bevelEnabled: true,
-          bevelThickness: 0.03,
-          bevelSize: 0.02,
-          bevelOffset: 0,
-          bevelSegments: 5,
-        });
-
-        const chromeMaterial = new THREE.MeshPhysicalMaterial({
-          color: 0xffffff,
-          metalness: 0.9,
-          roughness: 0.1,
-          reflectivity: 1,
-          clearcoat: 1,
-          clearcoatRoughness: 0.1,
-          envMap: envMap,
-          envMapIntensity: 1,
-        });
-
-        textMesh = new THREE.Mesh(textGeometry, chromeMaterial);
-        textGeometry.center();
-        scene.add(textMesh);
-
-        // Create exclamation point mesh
-        // const exclamationGeometry = new TextGeometry("!", {
-        //   font: font,
-        //   size: 0.7,
-        //   height: 0.2,
-        //   curveSegments: 12,
-        //   bevelEnabled: true,
-        //   bevelThickness: 0.03,
-        //   bevelSize: 0.02,
-        //   bevelOffset: 0,
-        //   bevelSegments: 5,
-        // });
-
-        // exclamationMesh = new THREE.Mesh(exclamationGeometry, chromeMaterial);
-        exclamationMesh.position.set(3, 0, 0); // Position it to the right of "MARY CHOI"
-        scene.add(exclamationMesh);
+      (loadedFont: Font) => {
+        font = loadedFont;
+        createText();
       }
     );
 
     window.addEventListener("resize", onWindowResize, false);
+    container.addEventListener("click", onClick, false);
+    container.addEventListener("keydown", onKeyDown, false);
+  }
+
+  function createText(): void {
+    if (textMesh) {
+      scene.remove(textMesh);
+    }
+
+    const textGeometry = new TextGeometry(text, {
+      font: font,
+      size: 0.7,
+      height: 0.2,
+      curveSegments: 12,
+      bevelEnabled: true,
+      bevelThickness: 0.03,
+      bevelSize: 0.02,
+      bevelOffset: 0,
+      bevelSegments: 5,
+    });
+
+    const chromeMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 0.9,
+      roughness: 0.1,
+      reflectivity: 1,
+      clearcoat: 1,
+      clearcoatRoughness: 0.1,
+      envMap: scene.environment,
+      envMapIntensity: 1,
+    });
+
+    textMesh = new THREE.Mesh(textGeometry, chromeMaterial);
+    textGeometry.center();
+    scene.add(textMesh);
   }
 
   function onWindowResize(): void {
@@ -141,14 +139,6 @@
 
     if (textMesh && isSpinning) {
       textMesh.rotation.y += 0.01;
-      if (exclamationMesh) {
-        exclamationMesh.rotation.y = textMesh.rotation.y;
-      }
-    }
-
-    if (exclamationMesh) {
-      exclamationMesh.visible = exclamationCount > 0;
-      exclamationMesh.scale.set(1, exclamationCount / 10, 1);
     }
 
     if (renderer && scene && camera) {
@@ -156,30 +146,51 @@
     }
   }
 
-  async function animateExclamations(): Promise<void> {
-    while (true) {
-      if (increasing) {
-        exclamationCount++;
-        if (exclamationCount === 10) increasing = false;
-      } else {
-        exclamationCount--;
-        if (exclamationCount === 0) increasing = true;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  }
-
   function toggleSpin(): void {
     isSpinning = !isSpinning;
   }
+
+  function onClick(event: MouseEvent): void {
+    event.preventDefault();
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObject(textMesh);
+
+    if (intersects.length > 0) {
+      toggleSpin();
+    }
+  }
+
+  function onKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Enter" || event.key === " ") {
+      toggleSpin();
+    }
+  }
+
+  $: if (font && text) {
+    createText();
+  }
 </script>
 
-<div bind:this={container} on:click={toggleSpin}></div>
+<div
+  bind:this={container}
+  tabindex="0"
+  aria-label="3D Text Display"
+  role="button"
+></div>
 
 <style>
   div {
     width: 100%;
     height: 100vh;
-    background-color: #1a1a1a; /* Dark background for better contrast */
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+    pointer-events: none;
   }
 </style>

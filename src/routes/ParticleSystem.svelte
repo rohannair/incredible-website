@@ -3,7 +3,7 @@
 
   export let containerWidth: number;
   export let containerHeight: number;
-  export let particleCount: number = 100;
+  export let particleCount: number = 2;
   export let particleIcon: string;
   export let staticIcon: string = "/mary2.png";
 
@@ -36,8 +36,8 @@
       x,
       y,
       size,
-      speedX: (Math.random() - 0.5) * 150,
-      speedY: (Math.random() - 0.5) * 150,
+      speedX: (Math.random() - 0.5) * 250,
+      speedY: (Math.random() - 0.5) * 250,
       opacity: Math.random() * 0.5 + 0.5,
       rotation: Math.random() * 360,
       rotationSpeed: (Math.random() - 0.5) * 5,
