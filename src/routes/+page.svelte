@@ -26,7 +26,13 @@
 
   let gameWon = false;
   let heroText = "MARY CHOI";
-  let particleCount = 15; // Easier to win in debug mode
+  let particleCount = 25; // Easier to win in debug mode
+
+  // New variables for timer and score
+  let timerStarted = false;
+  let timerValue = 0;
+  let clickedParticles = 0;
+  let startTime: number;
 
   const scale = tweened(1, {
     duration: 2000,
@@ -37,6 +43,7 @@
     gameWon = true;
     heroText = "KINGSTON'S VALET";
     animateKingstonImage();
+    stopTimer();
   }
 
   function animateKingstonImage() {
@@ -99,6 +106,32 @@
     }
   }
 
+  function startTimer() {
+    if (!timerStarted) {
+      timerStarted = true;
+      startTime = performance.now();
+      updateTimer();
+    }
+  }
+
+  function updateTimer() {
+    if (timerStarted && !gameWon) {
+      timerValue = performance.now() - startTime;
+      requestAnimationFrame(updateTimer);
+    }
+  }
+
+  function stopTimer() {
+    timerStarted = false;
+  }
+
+  function handleParticleClick() {
+    if (!timerStarted) {
+      startTimer();
+    }
+    clickedParticles++;
+  }
+
   onMount(() => {
     if (browser) {
       handleResize();
@@ -107,6 +140,7 @@
       window.addEventListener("resize", handleResize);
       return () => {
         window.removeEventListener("resize", handleResize);
+        stopTimer();
       };
     }
   });
@@ -167,6 +201,7 @@
     {particleIcon}
     {staticIcon}
     on:gameWon={handleGameWon}
+    on:particleClick={handleParticleClick}
   />
   {#if !gameWon}
     <img
@@ -184,6 +219,16 @@
     />
   {/if}
   <HeroBanner text={heroText} />
+  <div class="game-stats">
+    <p>Time: {(timerValue / 1000).toFixed(3)} seconds</p>
+    <p>Score: {clickedParticles}/{particleCount}</p>
+    <div class="progress-bar">
+      <div
+        class="progress"
+        style="width: {(clickedParticles / particleCount) * 100}%"
+      ></div>
+    </div>
+  </div>
   <footer class="footer">
     <a
       href="https://marymchoi.com"
@@ -250,5 +295,27 @@
 
   .button:hover {
     background-color: rgba(255, 255, 255, 0.6);
+  }
+
+  .game-stats {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    z-index: 20;
+  }
+
+  .progress-bar {
+    width: 200px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress {
+    height: 100%;
+    background-color: #4caf50;
+    transition: width 0.3s ease;
   }
 </style>

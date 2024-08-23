@@ -1,15 +1,4 @@
-<script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from "svelte";
-
-  export let containerWidth: number;
-  export let containerHeight: number;
-  export let particleCount: number = 2;
-  export let particleIcon: string;
-  export let staticIcon: string = "/mary2.png";
-
-  const STATIC_SIZE = 100; // Size of static particles in pixels
-  const dispatch = createEventDispatcher();
-
+<script lang="ts" context="module">
   interface Particle {
     x: number;
     y: number;
@@ -24,6 +13,19 @@
     originalX: number;
     originalY: number;
   }
+</script>
+
+<script lang="ts">
+  import { createEventDispatcher, onDestroy, onMount } from "svelte";
+
+  export let containerWidth: number;
+  export let containerHeight: number;
+  export let particleCount: number = 2;
+  export let particleIcon: string;
+  export let staticIcon: string = "/mary2.png";
+
+  const STATIC_SIZE = 100; // Size of static particles in pixels
+  const dispatch = createEventDispatcher();
 
   let particles: Particle[] = [];
   let gameWon = false;
@@ -96,13 +98,7 @@
     if (gameWon) return;
 
     const particle = particles[index];
-    if (particle.isStatic) {
-      // Change back to moving state
-      particle.isStatic = false;
-      particle.size = particle.originalSize;
-      particle.x = particle.originalX;
-      particle.y = particle.originalY;
-    } else {
+    if (!particle.isStatic) {
       // Change to static state
       particle.isStatic = true;
       particle.opacity = 1;
@@ -128,6 +124,8 @@
       );
 
       particle.size = STATIC_SIZE; // Set to the new static size
+
+      dispatch("particleClick");
     }
     particles = particles; // Trigger Svelte reactivity
   }
