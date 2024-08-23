@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { onDestroy, onMount } from "svelte";
+  import { createEventDispatcher, onDestroy, onMount } from "svelte";
 
   export let containerWidth: number;
   export let containerHeight: number;
-  export let particleCount: number = 50;
+  export let particleCount: number = 100;
   export let particleIcon: string;
   export let staticIcon: string = "/mary2.png";
 
   const STATIC_SIZE = 100; // Size of static particles in pixels
+  const dispatch = createEventDispatcher();
 
   interface Particle {
     x: number;
@@ -25,20 +26,21 @@
   }
 
   let particles: Particle[] = [];
+  let gameWon = false;
 
   function createParticle(): Particle {
-    const size = Math.random() * 20 + 10;
+    const size = Math.random() * 35 + 25;
     const x = Math.random() * (containerWidth - size);
     const y = Math.random() * (containerHeight - size);
     return {
       x,
       y,
       size,
-      speedX: (Math.random() - 0.5) * 100,
-      speedY: (Math.random() - 0.5) * 100,
+      speedX: (Math.random() - 0.5) * 150,
+      speedY: (Math.random() - 0.5) * 150,
       opacity: Math.random() * 0.5 + 0.5,
       rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 2,
+      rotationSpeed: (Math.random() - 0.5) * 5,
       isStatic: false,
       originalSize: size,
       originalX: x,
@@ -48,12 +50,19 @@
 
   function initParticles() {
     particles = Array(particleCount).fill(null).map(createParticle);
+    gameWon = false;
   }
 
   function updateParticles(delta: number) {
+    if (gameWon) return;
+
     const deltaSeconds = delta / 1000;
+    let staticParticleCount = 0;
     particles = particles.map((particle) => {
-      if (particle.isStatic) return particle;
+      if (particle.isStatic) {
+        staticParticleCount += 1;
+        return particle;
+      }
 
       // Update position
       particle.x += particle.speedX * deltaSeconds;
@@ -77,9 +86,15 @@
 
       return particle;
     });
+    if (staticParticleCount == particleCount) {
+      gameWon = true;
+      dispatch("gameWon");
+    }
   }
 
   function toggleParticleState(index: number) {
+    if (gameWon) return;
+
     const particle = particles[index];
     if (particle.isStatic) {
       // Change back to moving state
@@ -145,32 +160,34 @@
   }
 </script>
 
-{#each particles as particle, i}
-  <button
-    on:click={() => toggleParticleState(i)}
-    on:keydown={(e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        toggleParticleState(i);
-      }
-    }}
-    style="position: absolute; 
-           left: {particle.x}px; 
-           top: {particle.y}px; 
-           width: {particle.size}px; 
-           height: {particle.size}px; 
-           opacity: {particle.opacity};
-           transform: rotate({particle.isStatic ? 0 : particle.rotation}deg);
-           cursor: pointer;
-           background: none;
-           border: none;
-           padding: 0;
-           transition: all 0.3s ease;"
-    aria-label={particle.isStatic ? "Static particle" : "Moving particle"}
-  >
-    <img
-      src={particle.isStatic ? staticIcon : particleIcon}
-      alt=""
-      style="width: 100%; height: 100%; object-fit: cover;"
-    />
-  </button>
-{/each}
+{#if !gameWon}
+  {#each particles as particle, i}
+    <button
+      on:click={() => toggleParticleState(i)}
+      on:keydown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          toggleParticleState(i);
+        }
+      }}
+      style="position: absolute; 
+             left: {particle.x}px; 
+             top: {particle.y}px; 
+             width: {particle.size}px; 
+             height: {particle.size}px; 
+             opacity: {particle.opacity};
+             transform: rotate({particle.isStatic ? 0 : particle.rotation}deg);
+             cursor: pointer;
+             background: none;
+             border: none;
+             padding: 0;
+             transition: all 0.3s ease;"
+      aria-label={particle.isStatic ? "Static particle" : "Moving particle"}
+    >
+      <img
+        src={particle.isStatic ? staticIcon : particleIcon}
+        alt=""
+        style="width: 100%; height: 100%; object-fit: cover;"
+      />
+    </button>
+  {/each}
+{/if}

@@ -1,9 +1,11 @@
 <script lang="ts">
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
-  import ParticleSystem from "./ParticleSystem.svelte";
-  import HeroBanner from "./HeroBanner.svelte";
   import SvelteSeo from "svelte-seo";
+  import { cubicInOut } from "svelte/easing";
+  import { tweened } from "svelte/motion";
+  import HeroBanner from "./HeroBanner.svelte";
+  import ParticleSystem from "./ParticleSystem.svelte";
 
   let containerWidth: number = 1000; // Default value
   let containerHeight: number = 600; // Default value
@@ -20,6 +22,25 @@
   // Define the URLs for the particle icons
   const particleIcon = "/chicken.png";
   const staticIcon = "/mary2.png";
+  const kingstonIcon = "/kingston.png";
+
+  let gameWon = false;
+  let displayText = "MARY CHOI!!!!!!";
+
+  const scale = tweened(1, {
+    duration: 2000,
+    easing: cubicInOut,
+  });
+
+  function handleGameWon() {
+    gameWon = true;
+    displayText = "KINGSTON";
+    animateKingstonImage();
+  }
+
+  function animateKingstonImage() {
+    scale.set(1.5).then(() => scale.set(1));
+  }
 
   function handleImageLoad(): void {
     if (image) {
@@ -33,6 +54,8 @@
   }
 
   function updatePosition(delta: number): void {
+    if (gameWon) return;
+
     const deltaSeconds = delta / 1000;
 
     x += vx * deltaSeconds;
@@ -109,6 +132,12 @@
         height: 577,
         alt: "Mary",
       },
+      {
+        url: "/kingston.png",
+        width: 748,
+        height: 544,
+        alt: "Kingston",
+      },
     ],
     site_name: "Mary Choi",
   }}
@@ -128,21 +157,33 @@
   class="container"
   style="width: {containerWidth}px; height: {containerHeight}px;"
 >
-  <ParticleSystem
-    {containerWidth}
-    {containerHeight}
-    particleCount={30}
-    {particleIcon}
-    {staticIcon}
-  />
-  <img
-    bind:this={image}
-    src="/maryface.png"
-    alt="Mary Choi"
-    on:load={handleImageLoad}
-    style="position: absolute; left: {x}px; top: {y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
-  />
-  <HeroBanner />
+  {#if !gameWon}
+    <ParticleSystem
+      {containerWidth}
+      {containerHeight}
+      particleCount={30}
+      {particleIcon}
+      {staticIcon}
+      on:gameWon={handleGameWon}
+    />
+    <img
+      bind:this={image}
+      src="/maryface.png"
+      alt="Mary Choi"
+      on:load={handleImageLoad}
+      style="position: absolute; left: {x}px; top: {y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
+    />
+    <HeroBanner />
+  {:else}
+    <img
+      src={kingstonIcon}
+      alt="Kingston"
+      style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale({$scale}); max-width: 80%; max-height: 80%; object-fit: contain;"
+    />
+  {/if}
+  <div class="psychedelic-text">
+    {displayText}
+  </div>
   <footer class="footer">
     <a
       href="https://marymchoi.com"
