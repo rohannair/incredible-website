@@ -20,15 +20,21 @@
 
   export let containerWidth: number;
   export let containerHeight: number;
-  export let particleCount: number = 2;
+  export let particleCount = 2;
   export let particleIcon: string;
-  export let staticIcon: string = "/mary2.png";
+  export let staticIcon = "/mary2.png";
 
-  const STATIC_SIZE = 100; // Size of static particles in pixels
+  const STATIC_SIZE = 100;
   const dispatch = createEventDispatcher();
 
   let particles: Particle[] = [];
   let gameWon = false;
+  let animationFrame: number;
+  let lastTime: number;
+
+  $: if (containerWidth && containerHeight && particleIcon) {
+    initParticles();
+  }
 
   function createParticle(): Particle {
     const size = Math.random() * 35 + 25;
@@ -60,17 +66,16 @@
 
     const deltaSeconds = delta / 1000;
     let staticParticleCount = 0;
+
     particles = particles.map((particle) => {
       if (particle.isStatic) {
         staticParticleCount += 1;
         return particle;
       }
 
-      // Update position
       particle.x += particle.speedX * deltaSeconds;
       particle.y += particle.speedY * deltaSeconds;
 
-      // Bounce off walls
       if (particle.x < 0 || particle.x + particle.size > containerWidth) {
         particle.speedX = -particle.speedX;
         particle.x = particle.x < 0 ? 0 : containerWidth - particle.size;
@@ -80,15 +85,13 @@
         particle.y = particle.y < 0 ? 0 : containerHeight - particle.size;
       }
 
-      // Update rotation
       particle.rotation += particle.rotationSpeed * deltaSeconds * 60;
-
-      // Update opacity (make it pulse)
       particle.opacity = 0.5 + Math.sin(Date.now() / 1000) * 0.25;
 
       return particle;
     });
-    if (staticParticleCount == particleCount) {
+
+    if (staticParticleCount === particleCount) {
       gameWon = true;
       dispatch("gameWon");
     }
@@ -99,21 +102,16 @@
 
     const particle = particles[index];
     if (!particle.isStatic) {
-      // Change to static state
       particle.isStatic = true;
       particle.opacity = 1;
-      particle.rotation = 0; // Remove rotation
-
-      // Store original position
+      particle.rotation = 0;
       particle.originalX = particle.x;
       particle.originalY = particle.y;
 
-      // Adjust position to center the larger particle
       const sizeDiff = STATIC_SIZE - particle.size;
       particle.x -= sizeDiff / 2;
       particle.y -= sizeDiff / 2;
 
-      // Ensure the particle stays within bounds
       particle.x = Math.max(
         0,
         Math.min(particle.x, containerWidth - STATIC_SIZE)
@@ -123,15 +121,12 @@
         Math.min(particle.y, containerHeight - STATIC_SIZE)
       );
 
-      particle.size = STATIC_SIZE; // Set to the new static size
+      particle.size = STATIC_SIZE;
 
       dispatch("particleClick");
     }
-    particles = particles; // Trigger Svelte reactivity
+    particles = particles;
   }
-
-  let animationFrame: number;
-  let lastTime: number;
 
   function animate(time: number) {
     if (lastTime) {
@@ -152,10 +147,6 @@
       cancelAnimationFrame(animationFrame);
     }
   });
-
-  $: if (containerWidth && containerHeight && particleIcon) {
-    initParticles();
-  }
 </script>
 
 {#if !gameWon}
@@ -167,11 +158,11 @@
           toggleParticleState(i);
         }
       }}
-      style="position: absolute; 
-             left: {particle.x}px; 
-             top: {particle.y}px; 
-             width: {particle.size}px; 
-             height: {particle.size}px; 
+      style="position: absolute;
+             left: {particle.x}px;
+             top: {particle.y}px;
+             width: {particle.size}px;
+             height: {particle.size}px;
              opacity: {particle.opacity};
              transform: rotate({particle.isStatic ? 0 : particle.rotation}deg);
              cursor: pointer;

@@ -27,5 +27,8 @@
     "svelte-motion": "^0.12.2",
     "svelte-seo": "^1.6.1",
     "three": "^0.167.1"
-  }
+  },
+  "trustedDependencies": [
+    "svelte-preprocess"
+  ]
 }

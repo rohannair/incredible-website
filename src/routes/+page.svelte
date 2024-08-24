@@ -4,31 +4,27 @@
   import SvelteSeo from "svelte-seo";
   import { cubicInOut } from "svelte/easing";
   import { tweened } from "svelte/motion";
-  import HeroBanner from "./HeroBanner.svelte";
-  import ParticleSystem from "./ParticleSystem.svelte";
+  import HeroBanner from "../lib/components/HeroBanner.svelte";
+  import ParticleSystem from "../lib/components/ParticleSystem.svelte";
 
-  let containerWidth: number = 1000; // Default value
-  let containerHeight: number = 600; // Default value
+  // Constants
+  const PARTICLE_ICON = "/chicken.png";
+  const STATIC_ICON = "/mary2.png";
+  const KINGSTON_ICON = "/kingston.png";
+  const PARTICLE_COUNT = 25;
+
+  // State variables
+  let containerWidth = 1000;
+  let containerHeight = 600;
   let imageWidth = 100;
-  let imageHeight: number = 100; // Provide a default value
+  let imageHeight = 100;
   let image: HTMLImageElement;
-
-  // Initialize both x and y with default values
   let x = containerWidth / 2;
   let y = containerHeight / 2;
   let vx = 200;
   let vy = 200;
-
-  // Define the URLs for the particle icons
-  const particleIcon = "/chicken.png";
-  const staticIcon = "/mary2.png";
-  const kingstonIcon = "/kingston.png";
-
   let gameWon = false;
   let heroText = "MARY CHOI";
-  let particleCount = 25; // Easier to win in debug mode
-
-  // New variables for timer and score
   let timerStarted = false;
   let timerValue = 0;
   let clickedParticles = 0;
@@ -39,6 +35,7 @@
     easing: cubicInOut,
   });
 
+  // Functions
   function handleGameWon() {
     gameWon = true;
     heroText = "KINGSTON'S VALET";
@@ -47,8 +44,10 @@
   }
 
   function animateKingstonImage() {
-    const zoomIn = () => scale.set(1.5, { duration: 1000 }).then(zoomOut);
-    const zoomOut = () => scale.set(1, { duration: 1000 }).then(zoomIn);
+    const zoomIn = (): Promise<void> =>
+      scale.set(1.5, { duration: 1000 }).then(zoomOut);
+    const zoomOut = (): Promise<void> =>
+      scale.set(1, { duration: 1000 }).then(zoomIn);
     zoomIn();
   }
 
@@ -56,8 +55,6 @@
     if (image) {
       const aspectRatio = image.naturalWidth / image.naturalHeight;
       imageHeight = imageWidth / aspectRatio;
-
-      // Initialize position to center of container
       x = (containerWidth - imageWidth) / 2;
       y = (containerHeight - imageHeight) / 2;
     }
@@ -67,11 +64,9 @@
     if (gameWon) return;
 
     const deltaSeconds = delta / 1000;
-
     x += vx * deltaSeconds;
     y += vy * deltaSeconds;
 
-    // Ensure x and y are numbers
     x = Number.isFinite(x) ? x : containerWidth / 2;
     y = Number.isFinite(y) ? y : containerHeight / 2;
 
@@ -99,8 +94,6 @@
     if (browser) {
       containerWidth = window.innerWidth;
       containerHeight = window.innerHeight;
-
-      // Ensure the bouncing image stays within the new boundaries
       x = Math.min(Math.max(0, x), containerWidth - imageWidth);
       y = Math.min(Math.max(0, y), containerHeight - imageHeight);
     }
@@ -136,7 +129,6 @@
     if (browser) {
       handleResize();
       requestAnimationFrame(animate);
-
       window.addEventListener("resize", handleResize);
       return () => {
         window.removeEventListener("resize", handleResize);
@@ -157,24 +149,9 @@
       "Hi, I'm Mary, an Engineering Manager and Full Stack Engineer with healthcare experience. I build teams and robust, user-centric applications.",
     type: "website",
     images: [
-      {
-        url: "/maryface.png",
-        width: 460,
-        height: 460,
-        alt: "Mary",
-      },
-      {
-        url: "/mary2.png",
-        width: 433,
-        height: 577,
-        alt: "Mary",
-      },
-      {
-        url: "/kingston.png",
-        width: 748,
-        height: 544,
-        alt: "Kingston",
-      },
+      { url: "/maryface.png", width: 460, height: 460, alt: "Mary" },
+      { url: "/mary2.png", width: 433, height: 577, alt: "Mary" },
+      { url: "/kingston.png", width: 748, height: 544, alt: "Kingston" },
     ],
     site_name: "Mary Choi",
   }}
@@ -197,9 +174,9 @@
   <ParticleSystem
     {containerWidth}
     {containerHeight}
-    {particleCount}
-    {particleIcon}
-    {staticIcon}
+    particleCount={PARTICLE_COUNT}
+    particleIcon={PARTICLE_ICON}
+    staticIcon={STATIC_ICON}
     on:gameWon={handleGameWon}
     on:particleClick={handleParticleClick}
   />
@@ -213,7 +190,7 @@
     />
   {:else}
     <img
-      src={kingstonIcon}
+      src={KINGSTON_ICON}
       alt="Kingston"
       style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale({$scale}); max-width: 80%; max-height: 80%; object-fit: contain;"
     />
@@ -221,11 +198,11 @@
   <HeroBanner text={heroText} />
   <div class="game-stats">
     <p>Time: {(timerValue / 1000).toFixed(3)} seconds</p>
-    <p>Score: {clickedParticles}/{particleCount}</p>
+    <p>Score: {clickedParticles}/{PARTICLE_COUNT}</p>
     <div class="progress-bar">
       <div
         class="progress"
-        style="width: {(clickedParticles / particleCount) * 100}%"
+        style="width: {(clickedParticles / PARTICLE_COUNT) * 100}%"
       ></div>
     </div>
   </div>

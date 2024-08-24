@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
+  import { browser } from "$app/environment";
   import * as THREE from "three";
   import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
-  import type { Font } from "three/addons/loaders/FontLoader.js";
   import { FontLoader } from "three/addons/loaders/FontLoader.js";
+  import type { Font } from "three/addons/loaders/FontLoader.js";
 
-  export let text: string = "MARY CHOI";
+  export let text = "MARY CHOI";
 
   let container: HTMLDivElement;
   let scene: THREE.Scene;
@@ -16,17 +17,27 @@
   let raycaster: THREE.Raycaster;
   let mouse: THREE.Vector2;
   let font: Font;
-
-  const loader = new FontLoader();
+  let mounted = false;
 
   onMount(() => {
-    init();
-    animate();
+    mounted = true;
+    if (browser) {
+      init();
+      animate();
+      window.addEventListener("resize", onWindowResize, false);
+      container.addEventListener("click", onClick, false);
+      container.addEventListener("keydown", onKeyDown, false);
+    }
   });
 
   onDestroy(() => {
-    if (renderer) {
-      renderer.dispose();
+    if (browser) {
+      if (renderer) {
+        renderer.dispose();
+      }
+      window.removeEventListener("resize", onWindowResize);
+      container?.removeEventListener("click", onClick);
+      container?.removeEventListener("keydown", onKeyDown);
     }
   });
 
@@ -80,6 +91,7 @@
     ]);
     scene.environment = envMap;
 
+    const loader = new FontLoader();
     loader.load(
       "https://threejs.org/examples/fonts/helvetiker_bold.typeface.json",
       (loadedFont: Font) => {
@@ -87,10 +99,6 @@
         createText();
       }
     );
-
-    window.addEventListener("resize", onWindowResize, false);
-    container.addEventListener("click", onClick, false);
-    container.addEventListener("keydown", onKeyDown, false);
   }
 
   function createText(): void {
@@ -127,7 +135,7 @@
   }
 
   function onWindowResize(): void {
-    if (camera && renderer) {
+    if (browser && camera && renderer) {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -135,14 +143,12 @@
   }
 
   function animate(): void {
-    requestAnimationFrame(animate);
-
-    if (textMesh && isSpinning) {
-      textMesh.rotation.y += 0.01;
-    }
-
-    if (renderer && scene && camera) {
-      renderer.render(scene, camera);
+    if (browser) {
+      requestAnimationFrame(animate);
+      if (textMesh && isSpinning) {
+        textMesh.rotation.y += 0.01;
+      }
+      renderer?.render(scene, camera);
     }
   }
 
@@ -152,14 +158,10 @@
 
   function onClick(event: MouseEvent): void {
     event.preventDefault();
-
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
     raycaster.setFromCamera(mouse, camera);
-
     const intersects = raycaster.intersectObject(textMesh);
-
     if (intersects.length > 0) {
       toggleSpin();
     }
@@ -171,7 +173,7 @@
     }
   }
 
-  $: if (font && text) {
+  $: if (mounted && browser && font && text) {
     createText();
   }
 </script>
@@ -181,7 +183,7 @@
   tabindex="0"
   aria-label="3D Text Display"
   role="button"
-></div>
+/>
 
 <style>
   div {
