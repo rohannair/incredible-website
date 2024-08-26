@@ -29,11 +29,16 @@ export function createParticle(containerWidth: number, containerHeight: number):
     isStatic: false,
     originalSize: size,
     originalX: x,
-    originalY: y,
+    originalY: y
   };
 }
 
-export function updateParticle(particle: Particle, deltaSeconds: number, containerWidth: number, containerHeight: number): Particle {
+export function updateParticle(
+  particle: Particle,
+  deltaSeconds: number,
+  containerWidth: number,
+  containerHeight: number
+): Particle {
   if (particle.isStatic) {
     return particle;
   }

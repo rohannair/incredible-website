@@ -1,21 +1,21 @@
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
+import { createEventDispatcher } from "svelte";
 
-  export let x: number;
-  export let y: number;
-  export let size: number;
-  export let opacity: number;
-  export let rotation: number;
-  export let isStatic: boolean;
-  export let particleIcon: string;
-  export let staticIcon: string;
-  export let index: number;
+export let x: number;
+export let y: number;
+export let size: number;
+export let opacity: number;
+export let rotation: number;
+export let isStatic: boolean;
+export let particleIcon: string;
+export let staticIcon: string;
+export let index: number;
 
-  const dispatch = createEventDispatcher();
+const dispatch = createEventDispatcher();
 
-  function handleClick() {
-    dispatch("toggleState", index);
-  }
+function handleClick() {
+  dispatch("toggleState", index);
+}
 </script>
 
 <button

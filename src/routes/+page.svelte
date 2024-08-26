@@ -1,141 +1,139 @@
 <script lang="ts">
-  import { browser } from "$app/environment";
-  import { onMount } from "svelte";
-  import SvelteSeo from "svelte-seo";
-  import { cubicInOut } from "svelte/easing";
-  import { tweened } from "svelte/motion";
-  import HeroBanner from "../lib/components/HeroBanner.svelte";
-  import ParticleSystem from "../lib/components/ParticleSystem.svelte";
+import { browser } from "$app/environment";
+import { onMount } from "svelte";
+import SvelteSeo from "svelte-seo";
+import { cubicInOut } from "svelte/easing";
+import { tweened } from "svelte/motion";
+import HeroBanner from "../lib/components/HeroBanner.svelte";
+import ParticleSystem from "../lib/components/ParticleSystem.svelte";
 
-  // Constants
-  const PARTICLE_ICON = "/chicken.png";
-  const STATIC_ICON = "/mary2.png";
-  const KINGSTON_ICON = "/kingston.png";
-  const PARTICLE_COUNT = 25;
+// Constants
+const PARTICLE_ICON = "/chicken.png";
+const STATIC_ICON = "/mary2.png";
+const KINGSTON_ICON = "/kingston.png";
+const PARTICLE_COUNT = 25;
 
-  // State variables
-  let containerWidth = 1000;
-  let containerHeight = 600;
-  let imageWidth = 100;
-  let imageHeight = 100;
-  let image: HTMLImageElement;
-  let x = containerWidth / 2;
-  let y = containerHeight / 2;
-  let vx = 200;
-  let vy = 200;
-  let gameWon = false;
-  let heroText = "MARY CHOI";
-  let timerStarted = false;
-  let timerValue = 0;
-  let clickedParticles = 0;
-  let startTime: number;
+// State variables
+let containerWidth = 1000;
+let containerHeight = 600;
+let imageWidth = 100;
+let imageHeight = 100;
+let image: HTMLImageElement;
+let x = containerWidth / 2;
+let y = containerHeight / 2;
+let vx = 200;
+let vy = 200;
+let gameWon = false;
+let heroText = "MARY CHOI";
+let timerStarted = false;
+let timerValue = 0;
+let clickedParticles = 0;
+let startTime: number;
 
-  const scale = tweened(1, {
-    duration: 2000,
-    easing: cubicInOut,
-  });
+const scale = tweened(1, {
+  duration: 2000,
+  easing: cubicInOut
+});
 
-  // Functions
-  function handleGameWon() {
-    gameWon = true;
-    heroText = "KINGSTON'S VALET";
-    animateKingstonImage();
-    stopTimer();
+// Functions
+function handleGameWon() {
+  gameWon = true;
+  heroText = "KINGSTON'S VALET";
+  animateKingstonImage();
+  stopTimer();
+}
+
+function animateKingstonImage() {
+  const zoomIn = (): Promise<void> => scale.set(1.5, { duration: 1000 }).then(zoomOut);
+  const zoomOut = (): Promise<void> => scale.set(1, { duration: 1000 }).then(zoomIn);
+  zoomIn();
+}
+
+function handleImageLoad(): void {
+  if (image) {
+    const aspectRatio = image.naturalWidth / image.naturalHeight;
+    imageHeight = imageWidth / aspectRatio;
+    x = (containerWidth - imageWidth) / 2;
+    y = (containerHeight - imageHeight) / 2;
   }
+}
 
-  function animateKingstonImage() {
-    const zoomIn = (): Promise<void> =>
-      scale.set(1.5, { duration: 1000 }).then(zoomOut);
-    const zoomOut = (): Promise<void> =>
-      scale.set(1, { duration: 1000 }).then(zoomIn);
-    zoomIn();
+function updatePosition(delta: number): void {
+  if (gameWon) return;
+
+  const deltaSeconds = delta / 1000;
+  x += vx * deltaSeconds;
+  y += vy * deltaSeconds;
+
+  x = Number.isFinite(x) ? x : containerWidth / 2;
+  y = Number.isFinite(y) ? y : containerHeight / 2;
+
+  if (x <= 0 || x + imageWidth >= containerWidth) {
+    vx = -vx;
+    x = x <= 0 ? 0 : containerWidth - imageWidth;
   }
-
-  function handleImageLoad(): void {
-    if (image) {
-      const aspectRatio = image.naturalWidth / image.naturalHeight;
-      imageHeight = imageWidth / aspectRatio;
-      x = (containerWidth - imageWidth) / 2;
-      y = (containerHeight - imageHeight) / 2;
-    }
+  if (y <= 0 || y + imageHeight >= containerHeight) {
+    vy = -vy;
+    y = y <= 0 ? 0 : containerHeight - imageHeight;
   }
+}
 
-  function updatePosition(delta: number): void {
-    if (gameWon) return;
-
-    const deltaSeconds = delta / 1000;
-    x += vx * deltaSeconds;
-    y += vy * deltaSeconds;
-
-    x = Number.isFinite(x) ? x : containerWidth / 2;
-    y = Number.isFinite(y) ? y : containerHeight / 2;
-
-    if (x <= 0 || x + imageWidth >= containerWidth) {
-      vx = -vx;
-      x = x <= 0 ? 0 : containerWidth - imageWidth;
-    }
-    if (y <= 0 || y + imageHeight >= containerHeight) {
-      vy = -vy;
-      y = y <= 0 ? 0 : containerHeight - imageHeight;
-    }
+let lastTime: number;
+function animate(time: number): void {
+  if (lastTime) {
+    const delta = time - lastTime;
+    updatePosition(delta);
   }
+  lastTime = time;
+  requestAnimationFrame(animate);
+}
 
-  let lastTime: number;
-  function animate(time: number): void {
-    if (lastTime) {
-      const delta = time - lastTime;
-      updatePosition(delta);
-    }
-    lastTime = time;
+function handleResize() {
+  if (browser) {
+    containerWidth = window.innerWidth;
+    containerHeight = window.innerHeight;
+    x = Math.min(Math.max(0, x), containerWidth - imageWidth);
+    y = Math.min(Math.max(0, y), containerHeight - imageHeight);
+  }
+}
+
+function startTimer() {
+  if (!timerStarted) {
+    timerStarted = true;
+    startTime = performance.now();
+    updateTimer();
+  }
+}
+
+function updateTimer() {
+  if (timerStarted && !gameWon) {
+    timerValue = performance.now() - startTime;
+    requestAnimationFrame(updateTimer);
+  }
+}
+
+function stopTimer() {
+  timerStarted = false;
+}
+
+function handleParticleClick() {
+  if (!timerStarted) {
+    startTimer();
+  }
+  clickedParticles++;
+}
+
+onMount(() => {
+  if (browser) {
+    handleResize();
     requestAnimationFrame(animate);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      stopTimer();
+    };
   }
-
-  function handleResize() {
-    if (browser) {
-      containerWidth = window.innerWidth;
-      containerHeight = window.innerHeight;
-      x = Math.min(Math.max(0, x), containerWidth - imageWidth);
-      y = Math.min(Math.max(0, y), containerHeight - imageHeight);
-    }
-  }
-
-  function startTimer() {
-    if (!timerStarted) {
-      timerStarted = true;
-      startTime = performance.now();
-      updateTimer();
-    }
-  }
-
-  function updateTimer() {
-    if (timerStarted && !gameWon) {
-      timerValue = performance.now() - startTime;
-      requestAnimationFrame(updateTimer);
-    }
-  }
-
-  function stopTimer() {
-    timerStarted = false;
-  }
-
-  function handleParticleClick() {
-    if (!timerStarted) {
-      startTimer();
-    }
-    clickedParticles++;
-  }
-
-  onMount(() => {
-    if (browser) {
-      handleResize();
-      requestAnimationFrame(animate);
-      window.addEventListener("resize", handleResize);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-        stopTimer();
-      };
-    }
-  });
+});
 </script>
 
 <svelte:window on:resize={handleResize} />

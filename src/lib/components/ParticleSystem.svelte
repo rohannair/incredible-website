@@ -1,152 +1,130 @@
-<script lang="ts" context="module">
-  interface Particle {
-    x: number;
-    y: number;
-    size: number;
-    speedX: number;
-    speedY: number;
-    opacity: number;
-    rotation: number;
-    rotationSpeed: number;
-    isStatic: boolean;
-    originalSize: number;
-    originalX: number;
-    originalY: number;
-  }
-</script>
-
 <script lang="ts">
-  import { createEventDispatcher, onDestroy, onMount } from "svelte";
+import type { Particle } from "$lib/particle";
+import { createEventDispatcher, onDestroy, onMount } from "svelte";
+export let containerWidth: number;
+export let containerHeight: number;
+export let particleCount = 2;
+export let particleIcon: string;
+export let staticIcon = "/mary2.png";
 
-  export let containerWidth: number;
-  export let containerHeight: number;
-  export let particleCount = 2;
-  export let particleIcon: string;
-  export let staticIcon = "/mary2.png";
+const STATIC_SIZE = 100;
+const dispatch = createEventDispatcher();
 
-  const STATIC_SIZE = 100;
-  const dispatch = createEventDispatcher();
+let particles: Particle[] = [];
+let gameWon = false;
+let animationFrame: number;
+let lastTime: number;
 
-  let particles: Particle[] = [];
-  let gameWon = false;
-  let animationFrame: number;
-  let lastTime: number;
+$: if (containerWidth && containerHeight && particleIcon) {
+  initParticles();
+}
 
-  $: if (containerWidth && containerHeight && particleIcon) {
-    initParticles();
-  }
+function createParticle(): Particle {
+  const size = Math.random() * 35 + 25;
+  const x = Math.random() * (containerWidth - size);
+  const y = Math.random() * (containerHeight - size);
+  return {
+    x,
+    y,
+    size,
+    speedX: (Math.random() - 0.5) * 250,
+    speedY: (Math.random() - 0.5) * 250,
+    opacity: Math.random() * 0.5 + 0.5,
+    rotation: Math.random() * 360,
+    rotationSpeed: (Math.random() - 0.5) * 5,
+    isStatic: false,
+    originalSize: size,
+    originalX: x,
+    originalY: y
+  };
+}
 
-  function createParticle(): Particle {
-    const size = Math.random() * 35 + 25;
-    const x = Math.random() * (containerWidth - size);
-    const y = Math.random() * (containerHeight - size);
-    return {
-      x,
-      y,
-      size,
-      speedX: (Math.random() - 0.5) * 250,
-      speedY: (Math.random() - 0.5) * 250,
-      opacity: Math.random() * 0.5 + 0.5,
-      rotation: Math.random() * 360,
-      rotationSpeed: (Math.random() - 0.5) * 5,
-      isStatic: false,
-      originalSize: size,
-      originalX: x,
-      originalY: y,
-    };
-  }
+function initParticles() {
+  particles = Array(particleCount).fill(null).map(createParticle);
+  gameWon = false;
+}
 
-  function initParticles() {
-    particles = Array(particleCount).fill(null).map(createParticle);
-    gameWon = false;
-  }
+function updateParticles(delta: number) {
+  if (gameWon) return;
 
-  function updateParticles(delta: number) {
-    if (gameWon) return;
+  const deltaSeconds = delta / 1000;
+  let staticParticleCount = 0;
 
-    const deltaSeconds = delta / 1000;
-    let staticParticleCount = 0;
-
-    particles = particles.map((particle) => {
-      if (particle.isStatic) {
-        staticParticleCount += 1;
-        return particle;
-      }
-
-      particle.x += particle.speedX * deltaSeconds;
-      particle.y += particle.speedY * deltaSeconds;
-
-      if (particle.x < 0 || particle.x + particle.size > containerWidth) {
-        particle.speedX = -particle.speedX;
-        particle.x = particle.x < 0 ? 0 : containerWidth - particle.size;
-      }
-      if (particle.y < 0 || particle.y + particle.size > containerHeight) {
-        particle.speedY = -particle.speedY;
-        particle.y = particle.y < 0 ? 0 : containerHeight - particle.size;
-      }
-
-      particle.rotation += particle.rotationSpeed * deltaSeconds * 60;
-      particle.opacity = 0.5 + Math.sin(Date.now() / 1000) * 0.25;
-
+  particles = particles.map((particle) => {
+    if (particle.isStatic) {
+      staticParticleCount += 1;
       return particle;
-    });
-
-    if (staticParticleCount === particleCount) {
-      gameWon = true;
-      dispatch("gameWon");
     }
-  }
 
-  function toggleParticleState(index: number) {
-    if (gameWon) return;
+    particle.x += particle.speedX * deltaSeconds;
+    particle.y += particle.speedY * deltaSeconds;
 
-    const particle = particles[index];
-    if (!particle.isStatic) {
-      particle.isStatic = true;
-      particle.opacity = 1;
-      particle.rotation = 0;
-      particle.originalX = particle.x;
-      particle.originalY = particle.y;
-
-      const sizeDiff = STATIC_SIZE - particle.size;
-      particle.x -= sizeDiff / 2;
-      particle.y -= sizeDiff / 2;
-
-      particle.x = Math.max(
-        0,
-        Math.min(particle.x, containerWidth - STATIC_SIZE)
-      );
-      particle.y = Math.max(
-        0,
-        Math.min(particle.y, containerHeight - STATIC_SIZE)
-      );
-
-      particle.size = STATIC_SIZE;
-
-      dispatch("particleClick");
+    if (particle.x < 0 || particle.x + particle.size > containerWidth) {
+      particle.speedX = -particle.speedX;
+      particle.x = particle.x < 0 ? 0 : containerWidth - particle.size;
     }
-    particles = particles;
-  }
-
-  function animate(time: number) {
-    if (lastTime) {
-      const delta = time - lastTime;
-      updateParticles(delta);
+    if (particle.y < 0 || particle.y + particle.size > containerHeight) {
+      particle.speedY = -particle.speedY;
+      particle.y = particle.y < 0 ? 0 : containerHeight - particle.size;
     }
-    lastTime = time;
-    animationFrame = requestAnimationFrame(animate);
-  }
 
-  onMount(() => {
-    initParticles();
-    animationFrame = requestAnimationFrame(animate);
+    particle.rotation += particle.rotationSpeed * deltaSeconds * 60;
+    particle.opacity = 0.5 + Math.sin(Date.now() / 1000) * 0.25;
+
+    return particle;
   });
 
-  onDestroy(() => {
-    if (animationFrame) {
-      cancelAnimationFrame(animationFrame);
-    }
-  });
+  if (staticParticleCount === particleCount) {
+    gameWon = true;
+    dispatch("gameWon");
+  }
+}
+
+function toggleParticleState(index: number) {
+  if (gameWon) return;
+
+  const particle = particles[index];
+  if (!particle.isStatic) {
+    particle.isStatic = true;
+    particle.opacity = 1;
+    particle.rotation = 0;
+    particle.originalX = particle.x;
+    particle.originalY = particle.y;
+
+    const sizeDiff = STATIC_SIZE - particle.size;
+    particle.x -= sizeDiff / 2;
+    particle.y -= sizeDiff / 2;
+
+    particle.x = Math.max(0, Math.min(particle.x, containerWidth - STATIC_SIZE));
+    particle.y = Math.max(0, Math.min(particle.y, containerHeight - STATIC_SIZE));
+
+    particle.size = STATIC_SIZE;
+
+    dispatch("particleClick");
+  }
+  // biome-ignore lint/correctness/noSelfAssign: trigger svelte reactivity
+  particles = particles;
+}
+
+function animate(time: number) {
+  if (lastTime) {
+    const delta = time - lastTime;
+    updateParticles(delta);
+  }
+  lastTime = time;
+  animationFrame = requestAnimationFrame(animate);
+}
+
+onMount(() => {
+  initParticles();
+  animationFrame = requestAnimationFrame(animate);
+});
+
+onDestroy(() => {
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame);
+  }
+});
 </script>
 
 {#if !gameWon}
