@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
+  import * as Point from "$lib/point";
 
-  export let x: number;
-  export let y: number;
+  export let position: Point.Point;
   export let size: number;
   export let opacity: number;
   export let rotation: number;
@@ -26,8 +26,8 @@
     }
   }}
   style="position: absolute;
-         left: {x}px;
-         top: {y}px;
+         left: {position.x}px;
+         top: {position.y}px;
          width: {size}px;
          height: {size}px;
          opacity: {opacity};

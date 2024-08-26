@@ -1,17 +1,25 @@
 <script lang="ts" context="module">
+  import * as Vector from "$lib/vector";
+  import * as Point from "$lib/point";
+
+  export let containerWidth: number;
+  export let containerHeight: number;
+  export let particleCount: number = 50;
+  export let particleIcon: string;
+  export let staticIcon: string = "/mary2.png";
+
+  const STATIC_SIZE = 100; // Size of static particles in pixels
+
   interface Particle {
-    x: number;
-    y: number;
+    position: Point.Point;
     size: number;
-    speedX: number;
-    speedY: number;
+    speed: Vector.Vector;
     opacity: number;
     rotation: number;
     rotationSpeed: number;
     isStatic: boolean;
     originalSize: number;
-    originalX: number;
-    originalY: number;
+    originalPosition: Point.Point;
   }
 </script>
 
@@ -41,18 +49,18 @@
     const x = Math.random() * (containerWidth - size);
     const y = Math.random() * (containerHeight - size);
     return {
-      x,
-      y,
+      position: Point.create(x, y),
       size,
-      speedX: (Math.random() - 0.5) * 250,
-      speedY: (Math.random() - 0.5) * 250,
+      speed: Vector.create(
+        (Math.random() - 0.5) * 250,
+        (Math.random() - 0.5) * 250
+      ),
       opacity: Math.random() * 0.5 + 0.5,
       rotation: Math.random() * 360,
       rotationSpeed: (Math.random() - 0.5) * 5,
       isStatic: false,
       originalSize: size,
-      originalX: x,
-      originalY: y,
+      originalPosition: Point.create(x, y),
     };
   }
 
@@ -73,16 +81,30 @@
         return particle;
       }
 
-      particle.x += particle.speedX * deltaSeconds;
-      particle.y += particle.speedY * deltaSeconds;
+      particle.position = Point.applyVector(
+        Vector.scale(deltaSeconds, particle.speed),
+        particle.position
+      );
 
-      if (particle.x < 0 || particle.x + particle.size > containerWidth) {
-        particle.speedX = -particle.speedX;
-        particle.x = particle.x < 0 ? 0 : containerWidth - particle.size;
+      if (
+        particle.position.x < 0 ||
+        particle.position.x + particle.size > containerWidth
+      ) {
+        particle.speed = Vector.invertX(particle.speed);
+        particle.position = Point.create(
+          particle.position.x < 0 ? 0 : containerWidth - particle.size,
+          particle.position.y
+        );
       }
-      if (particle.y < 0 || particle.y + particle.size > containerHeight) {
-        particle.speedY = -particle.speedY;
-        particle.y = particle.y < 0 ? 0 : containerHeight - particle.size;
+      if (
+        particle.position.y < 0 ||
+        particle.position.y + particle.size > containerHeight
+      ) {
+        particle.speed = Vector.invertY(particle.speed);
+        particle.position = Point.create(
+          particle.position.x,
+          particle.position.y < 0 ? 0 : containerHeight - particle.size
+        );
       }
 
       particle.rotation += particle.rotationSpeed * deltaSeconds * 60;
@@ -101,24 +123,36 @@
     if (gameWon) return;
 
     const particle = particles[index];
-    if (!particle.isStatic) {
+    if (particle.isStatic) {
+      // Change back to moving state
+      particle.isStatic = false;
+      particle.size = particle.originalSize;
+      particle.position = particle.originalPosition;
+    } else {
+      // Change to static state
       particle.isStatic = true;
       particle.opacity = 1;
-      particle.rotation = 0;
-      particle.originalX = particle.x;
-      particle.originalY = particle.y;
+      particle.rotation = 0; // Remove rotatio
+
+      // Store original position
+      particle.originalPosition = particle.position;
 
       const sizeDiff = STATIC_SIZE - particle.size;
-      particle.x -= sizeDiff / 2;
-      particle.y -= sizeDiff / 2;
-
-      particle.x = Math.max(
-        0,
-        Math.min(particle.x, containerWidth - STATIC_SIZE)
+      particle.position = Point.create(
+        particle.originalPosition.x - sizeDiff / 2,
+        particle.originalPosition.y - sizeDiff / 2
       );
-      particle.y = Math.max(
-        0,
-        Math.min(particle.y, containerHeight - STATIC_SIZE)
+
+      // Ensure the particle stays within bounds
+      particle.position = Point.create(
+        Math.max(
+          0,
+          Math.min(particle.position.x, containerWidth - STATIC_SIZE)
+        ),
+        Math.max(
+          0,
+          Math.min(particle.position.y, containerHeight - STATIC_SIZE)
+        )
       );
 
       particle.size = STATIC_SIZE;
@@ -158,11 +192,11 @@
           toggleParticleState(i);
         }
       }}
-      style="position: absolute;
-             left: {particle.x}px;
-             top: {particle.y}px;
-             width: {particle.size}px;
-             height: {particle.size}px;
+      style="position: absolute; 
+             left: {particle.position.x}px; 
+             top: {particle.position.y}px; 
+             width: {particle.size}px; 
+             height: {particle.size}px; 
              opacity: {particle.opacity};
              transform: rotate({particle.isStatic ? 0 : particle.rotation}deg);
              cursor: pointer;
