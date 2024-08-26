@@ -1,4 +1,6 @@
 <script lang="ts">
+  import * as Vector from "$lib/vector";
+  import * as Point from "$lib/point";
   import { browser } from "$app/environment";
   import { onMount } from "svelte";
   import SvelteSeo from "svelte-seo";
@@ -19,10 +21,11 @@
   let imageWidth = 100;
   let imageHeight = 100;
   let image: HTMLImageElement;
-  let x = containerWidth / 2;
-  let y = containerHeight / 2;
-  let vx = 200;
-  let vy = 200;
+
+  // Initialize both x and y with default values
+  let position = Point.create(containerWidth / 2, containerHeight / 2);
+  let speed = Vector.create(200, 200);
+
   let gameWon = false;
   let heroText = "MARY CHOI";
   let timerStarted = false;
@@ -44,10 +47,14 @@
   }
 
   function animateKingstonImage() {
-    const zoomIn = (): Promise<void> =>
-      scale.set(1.5, { duration: 1000 }).then(zoomOut);
-    const zoomOut = (): Promise<void> =>
-      scale.set(1, { duration: 1000 }).then(zoomIn);
+    const zoomIn = async () => {
+      await scale.set(1.5, { duration: 1000 });
+      zoomOut();
+    };
+    const zoomOut = async () => {
+      await scale.set(1, { duration: 1000 });
+      zoomIn();
+    };
     zoomIn();
   }
 
@@ -55,8 +62,12 @@
     if (image) {
       const aspectRatio = image.naturalWidth / image.naturalHeight;
       imageHeight = imageWidth / aspectRatio;
-      x = (containerWidth - imageWidth) / 2;
-      y = (containerHeight - imageHeight) / 2;
+
+      // Initialize position to center of container
+      position = Point.create(
+        (containerWidth - imageWidth) / 2,
+        (containerHeight - imageHeight) / 2
+      );
     }
   }
 
@@ -64,19 +75,22 @@
     if (gameWon) return;
 
     const deltaSeconds = delta / 1000;
-    x += vx * deltaSeconds;
-    y += vy * deltaSeconds;
 
-    x = Number.isFinite(x) ? x : containerWidth / 2;
-    y = Number.isFinite(y) ? y : containerHeight / 2;
+    position = Point.applyVector(Vector.scale(deltaSeconds, speed), position);
 
-    if (x <= 0 || x + imageWidth >= containerWidth) {
-      vx = -vx;
-      x = x <= 0 ? 0 : containerWidth - imageWidth;
+    if (position.x <= 0 || position.x + imageWidth >= containerWidth) {
+      speed = Vector.invertX(speed);
+      position = Point.create(
+        position.x <= 0 ? 0 : containerWidth - imageWidth,
+        position.y
+      );
     }
-    if (y <= 0 || y + imageHeight >= containerHeight) {
-      vy = -vy;
-      y = y <= 0 ? 0 : containerHeight - imageHeight;
+    if (position.y <= 0 || position.y + imageHeight >= containerHeight) {
+      speed = Vector.invertY(speed);
+      position = Point.create(
+        position.x,
+        position.y <= 0 ? 0 : containerHeight - imageHeight
+      );
     }
   }
 
@@ -94,8 +108,12 @@
     if (browser) {
       containerWidth = window.innerWidth;
       containerHeight = window.innerHeight;
-      x = Math.min(Math.max(0, x), containerWidth - imageWidth);
-      y = Math.min(Math.max(0, y), containerHeight - imageHeight);
+
+      // Ensure the bouncing image stays within the new boundaries
+      position = Point.create(
+        Math.min(Math.max(0, position.x), containerWidth - imageWidth),
+        Math.min(Math.max(0, position.y), containerHeight - imageHeight)
+      );
     }
   }
 
@@ -167,10 +185,7 @@
   </style>
 </svelte:head>
 
-<div
-  class="container"
-  style="width: {containerWidth}px; height: {containerHeight}px;"
->
+<div class="container" style="width: 100vw; height: 100vh;">
   <ParticleSystem
     {containerWidth}
     {containerHeight}
@@ -186,7 +201,7 @@
       src="/maryface.png"
       alt="Mary Choi"
       on:load={handleImageLoad}
-      style="position: absolute; left: {x}px; top: {y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
+      style="position: absolute; left: {position.x}px; top: {position.y}px; width: {imageWidth}px; height: {imageHeight}px; z-index: 10;"
     />
   {:else}
     <img
